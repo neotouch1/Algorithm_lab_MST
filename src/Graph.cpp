@@ -2,6 +2,7 @@
 #include"2_heap.h"
 #include<set>
 #include"UnionFind.h"
+#include <queue>
 
 Graph::Graph(int vertices) : size(vertices)
 {
@@ -21,34 +22,40 @@ void Graph::addEdge(int from, int to, int weight)
 
 void Graph::removeEdge(const Edge& edge)
 {
-	auto it = list[edge.from].begin();
+	// Создаем список индексов элементов для удаления
+	std::vector<int> indicesToRemove;
 
-	while (it != list[edge.from].end())
+	// Поиск индексов ребра в списке смежности вершины "from"
+	for (int i = 0; i < list[edge.from].size(); ++i)
 	{
-		if (it->to == edge.to)
+		if (list[edge.from][i].to == edge.to)
 		{
-			list[edge.from].erase(it);
-			break;
-		}
-		else
-		{
-			++it;
+			indicesToRemove.push_back(i);
 		}
 	}
 
-	it = list[edge.to].begin();
-
-	while (it != list[edge.to].end())
+	// Удаляем найденные элементы из списка смежности вершины "from"
+	for (int index : indicesToRemove)
 	{
-		if (it->to == edge.from)
+		list[edge.from].erase(list[edge.from].begin() + index);
+	}
+
+	// Очищаем список для следующей операции
+	indicesToRemove.clear();
+
+	// Поиск индексов ребра в списке смежности вершины "to"
+	for (int i = 0; i < list[edge.to].size(); ++i)
+	{
+		if (list[edge.to][i].to == edge.from)
 		{
-			list[edge.to].erase(it);
-			break;
+			indicesToRemove.push_back(i);
 		}
-		else
-		{
-			++it;
-		}
+	}
+
+	// Удаляем найденные элементы из списка смежности вершины "to"
+	for (int index : indicesToRemove)
+	{
+		list[edge.to].erase(list[edge.to].begin() + index);
 	}
 }
 
@@ -152,10 +159,108 @@ void Graph::Kruskal()
 	cout << "kruskal is and" << endl;
 }
 
+bool Graph::BFS()
+{
+	if (size == 0)
+		return false;
+
+	vector<bool> visited(size, false);
+	queue<int> q;
+	int start_v = 0;
+
+	q.push(start_v);
+	visited[start_v] = true;
+
+	while (!q.empty())
+	{
+		int c_vert = q.front();
+		q.pop();
+
+		for (const Edge& edge : list[c_vert])
+		{
+			if (!visited[edge.to])
+			{
+				visited[edge.to] = true;
+				q.push(edge.to);
+			}
+		}
+	}
+	for (bool v : visited)
+	{
+		if (!v)
+		{
+			return false;
+		}
+	}
+	return true;
+}
 
 
 
-void Graph::generateRandGraph(int _size, int minWeigh, int maxWeight)
+
+
+void Graph::generateRandGraph(int _size, int numEdge, int minWeigh, int maxWeight)
+{
+	if (minWeigh < 1) throw "minWeight should be greater than or equal to 1";
+
+	size = _size;
+	list.clear();
+	list.resize(size);
+
+	mt19937 rng(time(0));
+
+	uniform_int_distribution<int> weightDist(1, maxWeight);
+	uniform_int_distribution<int> vertDist(0, size-1);
+
+	if (size - 1 < numEdge && numEdge <= (((size) * (size - 1)) / 2))
+	{
+		for (int from = 0; from < size - 1; ++from)
+		{
+			for (int to = 0; to < 1; ++to)
+			{
+				int weight = weightDist(rng);
+				addEdge(from, from + 1, weight);
+			}
+		}
+
+		addEdge(size - 1, 0, weightDist(rng));
+
+
+		int count = 0;
+		while (count != (numEdge - size))
+		{
+			int weight = weightDist(rng);
+
+			int v = vertDist(rng);
+			int u = vertDist(rng);
+			bool ver = false;
+
+			if (u != v)
+			{
+				for (const Edge& edge : list[v])
+				{
+					if (edge.to == u)
+					{
+						ver = true;
+					}
+				}
+
+				if (!ver) {
+					addEdge(v, u, weight);
+					++count;
+				}
+			}
+
+
+		}
+	}
+	else
+	{
+		throw "error Edges!";
+	}
+}
+
+void Graph::generateRandFullGraph(int _size, int minWeigh, int maxWeight)
 {
 	if (minWeigh < 1) throw "minWeight should be greater than or equal to 1";
 

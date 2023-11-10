@@ -25,9 +25,11 @@ public:
 	Graph(int vertices);
 	void addEdge(int from, int to, int weight);
 	void removeEdge(const Edge& edge);
-	void generateRandGraph(int _size, int minWeight, int maxWeight);
+	void generateRandGraph(int _size, int numEdge, int minWeight, int maxWeight);
+	void generateRandFullGraph(int _size, int minWeigh, int maxWeight);
 
 	void printGraph();
 	void PrimMST();
 	void Kruskal();
+	bool BFS();
 };
